@@ -172,25 +172,12 @@
   </p>
 
   <div class="wallet-tabs">
-    <button class="tab active" onclick="switchTab('btc')">₿ BTC</button>
-    <button class="tab" onclick="switchTab('eth')">Ξ ETH</button>
+    <button class="tab active" onclick="switchTab('eth')">Ξ ETH</button>
     <button class="tab" onclick="switchTab('usdt')">₮ USDT</button>
   </div>
 
-  <!-- BTC -->
-  <div class="wallet-panel active" id="panel-btc">
-    <div class="qr-wrapper">
-      <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=YOUR_BTC_ADDRESS_HERE"
-           alt="BTC QR Code" id="qr-btc">
-    </div>
-    <div class="address-box">
-      <span class="address-text" id="addr-btc">YOUR_BTC_ADDRESS_HERE</span>
-      <button class="copy-btn" onclick="copyAddress('YOUR_BTC_ADDRESS_HERE', this)">📋 复制</button>
-    </div>
-  </div>
-
   <!-- ETH -->
-  <div class="wallet-panel" id="panel-eth">
+  <div class="wallet-panel active" id="panel-eth">
     <div class="qr-wrapper">
       <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=0x8dd3979a023f4d90ddba993199f330439877cf8e"
            alt="ETH QR Code" id="qr-eth">
