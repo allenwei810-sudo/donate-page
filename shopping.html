@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1a1a2e">
+<title>购物助手 - 比价返利一键查</title>
+<link rel="manifest" href="manifest.json">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif;
+    background: #0f0f1a;
+    color: #e0e0e0;
+    min-height: 100vh;
+    padding: 0;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* 顶部 */
+  .header {
+    padding: 20px 16px 12px;
+    background: linear-gradient(180deg, #1a1a2e, #16213e);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    backdrop-filter: blur(20px);
+  }
+  .header h1 {
+    font-size: 22px;
+    font-weight: 800;
+    background: linear-gradient(90deg, #ff6b6b, #feca57);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    display: inline;
+  }
+  .header .date-badge {
+    font-size: 12px;
+    color: #ff6b6b;
+    margin-left: 8px;
+    font-weight: 600;
+  }
+
+  /* 输入区 */
+  .input-area {
+    padding: 0 16px 16px;
+  }
+  .url-input-wrap {
+    display: flex;
+    gap: 8px;
+    background: rgba(255,255,255,0.06);
+    border: 2px solid rgba(255,255,255,0.1);
+    border-radius: 14px;
+    padding: 4px;
+    transition: border-color 0.3s;
+  }
+  .url-input-wrap:focus-within {
+    border-color: #ff6b6b;
+  }
+  .url-input-wrap input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-size: 15px;
+    padding: 12px;
+    outline: none;
+  }
+  .url-input-wrap input::placeholder { color: #555; }
+  .url-input-wrap button {
+    background: linear-gradient(135deg, #ff6b6b, #e74c3c);
+    border: none;
+    border-radius: 10px;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 12px 20px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: transform 0.15s;
+  }
+  .url-input-wrap button:active { transform: scale(0.95); }
+
+  .hint-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+  }
+  .hint-tag {
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.06);
+    color: #888;
+    cursor: pointer;
+  }
+  .hint-tag:active { background: rgba(255,107,107,0.2); color: #ff6b6b; }
+
+  /* 商品卡片 */
+  .product-card {
+    margin: 0 16px 16px;
+    padding: 16px;
+    border-radius: 16px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    display: none;
+  }
+  .product-card.visible { display: block; }
+  .product-name {
+    font-size: 14px;
+    line-height: 1.5;
+    color: #ccc;
+    margin-bottom: 8px;
+  }
+  .product-price {
+    font-size: 28px;
+    font-weight: 800;
+    color: #ff6b6b;
+  }
+  .product-platform {
+    display: inline-block;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 6px;
+    margin-left: 8px;
+    font-weight: 600;
+    vertical-align: middle;
+  }
+  .platform-jd { background: #e0245e20; color: #e0245e; }
+  .platform-taobao { background: #ff500020; color: #ff5000; }
+  .platform-pdd { background: #e0245e20; color: #e0245e; }
+
+  /* 功能区 */
+  .actions {
+    padding: 0 16px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .action-card {
+    padding: 16px;
+    border-radius: 14px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 6px;
+    transition: all 0.2s;
+    color: #e0e0e0;
+  }
+  .action-card:active {
+    background: rgba(255,107,107,0.1);
+    border-color: rgba(255,107,107,0.3);
+    transform: scale(0.97);
+  }
+  .action-card .icon { font-size: 28px; }
+  .action-card .label { font-size: 13px; font-weight: 600; }
+  .action-card .sub { font-size: 11px; color: #777; }
+
+  /* 优惠券区 */
+  .coupon-section {
+    margin: 16px 16px;
+    display: none;
+  }
+  .coupon-section.visible { display: block; }
+  .coupon-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #aaa;
+    margin-bottom: 10px;
+  }
+  .coupon-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 12px;
+    margin-bottom: 8px;
+    gap: 10px;
+  }
+  .coupon-desc { font-size: 13px; flex:1; }
+  .coupon-code {
+    font-family: 'SF Mono', monospace;
+    background: rgba(255,107,107,0.15);
+    color: #ff6b6b;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+    white-space: nowrap;
+    font-weight: 700;
+  }
+  .coupon-code:active { background: rgba(39,174,96,0.4); color: #27ae60; }
+
+  /* 底部 */
+  .footer {
+    text-align: center;
+    padding: 30px 16px;
+    color: #444;
+    font-size: 12px;
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%,-50%);
+    background: rgba(39,174,96,0.9);
+    color: #fff;
+    padding: 12px 28px;
+    border-radius: 24px;
+    font-size: 15px;
+    font-weight: 600;
+    z-index: 999;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🛒 购物助手</h1>
+  <span class="date-badge">618 狂欢</span>
+</div>
+
+<div class="input-area">
+  <div class="url-input-wrap">
+    <input type="text" id="urlInput" placeholder="粘贴淘宝/京东/拼多多商品链接...">
+    <button onclick="analyze()">🔍 查询</button>
+  </div>
+  <div class="hint-row">
+    <span class="hint-tag" onclick="demoSearch('iPhone 16')">📱 iPhone 16</span>
+    <span class="hint-tag" onclick="demoSearch('AirPods Pro')">🎧 AirPods Pro</span>
+    <span class="hint-tag" onclick="demoSearch('显示器 4K')">🖥 显示器 4K</span>
+    <span class="hint-tag" onclick="document.getElementById('urlInput').focus()">🔗 粘贴链接</span>
+  </div>
+</div>
+
+<!-- 商品信息卡片 -->
+<div class="product-card" id="productCard">
+  <div id="productName" class="product-name"></div>
+  <div>
+    <span id="productPrice" class="product-price"></span>
+    <span id="productPlatform" class="product-platform"></span>
+  </div>
+</div>
+
+<!-- 核心功能区 -->
+<div class="actions">
+  <a class="action-card" id="btnHistory" href="#" target="_blank">
+    <span class="icon">📈</span>
+    <span class="label">历史价格</span>
+    <span class="sub">慢慢买 · 比一比价</span>
+  </a>
+  <a class="action-card" id="btnSmzdm" href="#" target="_blank">
+    <span class="icon">🔍</span>
+    <span class="label">什么值得买</span>
+    <span class="sub">全网比价 & 评测</span>
+  </a>
+  <a class="action-card" id="btnRebate" href="#" target="_blank">
+    <span class="icon">💰</span>
+    <span class="label">返利下单</span>
+    <span class="sub" id="rebateSub">走返利省 5%-30%</span>
+  </a>
+  <div class="action-card" onclick="copyShareLink()">
+    <span class="icon">📋</span>
+    <span class="label">复制链接</span>
+    <span class="sub">分享给朋友帮看</span>
+  </div>
+</div>
+
+<!-- 优惠券区 -->
+<div class="coupon-section" id="couponSection">
+  <div class="coupon-title">🎫 可试优惠码（点击复制）</div>
+  <div id="couponList"></div>
+</div>
+
+<div class="footer">
+  💡 下单前记得走返利 &nbsp;|&nbsp; 618 最后一天 &nbsp;|&nbsp;
+  <a href="index.html" style="color:#ff6b6b">☕ 请喝咖啡</a>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // ========== 优惠券数据库 ==========
+  const COUPONS = {
+    jd: [
+      { code:'JD618', desc:'京东 618 通用 满200减20' },
+      { code:'JDC008', desc:'京东超市 满299减30' },
+      { code:'JDH888', desc:'京东健康 满99减10' },
+      { code:'JD3C66', desc:'京东数码 满500减50' },
+    ],
+    taobao: [
+      { code:'天猫618', desc:'天猫 618 满300减50' },
+      { code:'88VIP', desc:'88VIP 专享 95折' },
+    ],
+    pdd: [
+      { code:'618', desc:'拼多多 百亿补贴' },
+    ],
+    vip: [],
+    unknown: [
+      { code:'618', desc:'试试通用优惠码' },
+    ],
+  };
+
+  // ========== 解析链接 ==========
+  function parseLink(url) {
+    url = url.trim();
+    if (!url) return null;
+
+    let platform = 'unknown';
+    if (url.includes('taobao.com') || url.includes('tmall.com')) platform = 'taobao';
+    else if (url.includes('jd.com')) platform = 'jd';
+    else if (url.includes('yangkeduo')) platform = 'pdd';
+    else if (url.includes('vip.com')) platform = 'vip';
+
+    return {
+      platform,
+      url,
+      query: url.includes('?') ? url.split('?')[1] : '',
+    };
+  }
+
+  // ========== 构建比价链接 ==========
+  function buildLinks(platform, query) {
+    const kw = query || '618 好物';
+    return {
+      manmanbuy: `https://www.manmanbuy.com/search.aspx?k=${encodeURIComponent(kw)}`,
+      smzdm: `https://search.smzdm.com/?c=home&s=${encodeURIComponent(kw)}`,
+      bibijia: `https://www.bibijia.com/search?q=${encodeURIComponent(kw)}`,
+      rebate: getRebateUrl(platform, kw),
+    };
+  }
+
+  function getRebateUrl(platform, kw) {
+    const encoded = encodeURIComponent(kw.substring(0, 15));
+    switch (platform) {
+      case 'taobao': return `https://pub.alimama.com/#!/promo/self/search?q=${encoded}`;
+      case 'jd': return `https://union.jd.com/proManager/index?keywords=${encoded}`;
+      case 'pdd': return `https://jinbao.pinduoduo.com/promotion/single-promotion/search?keyword=${encoded}`;
+      default: return `https://www.fanli.com/`;
+    }
+  }
+
+  function getRebateText(platform) {
+    switch (platform) {
+      case 'taobao': return '淘宝联盟 · 返 5%-30%';
+      case 'jd': return '京粉 · 返 2%-15%';
+      case 'pdd': return '多多进宝 · 返 3%-20%';
+      default: return '返利网查返利';
+    }
+  }
+
+  function getPlatformTag(platform) {
+    switch (platform) {
+      case 'jd': return '<span class="product-platform platform-jd">京东</span>';
+      case 'taobao': return '<span class="product-platform platform-taobao">淘宝/天猫</span>';
+      case 'pdd': return '<span class="product-platform platform-pdd">拼多多</span>';
+      default: return '';
+    }
+  }
+
+  // ========== 主流程 ==========
+  function analyze() {
+    const input = document.getElementById('urlInput').value.trim();
+    if (!input) { showToast('请先粘贴商品链接'); return; }
+
+    const parsed = parseLink(input) || {};
+    const platform = parsed.platform || 'unknown';
+    const query = input.substring(0, 40);
+
+    // 更新商品卡片
+    const card = document.getElementById('productCard');
+    card.classList.add('visible');
+    document.getElementById('productName').textContent = query;
+    document.getElementById('productPrice').textContent = '¥ ??';
+    document.getElementById('productPlatform').innerHTML = getPlatformTag(platform);
+
+    // 更新比价链接
+    const links = buildLinks(platform, query);
+    document.getElementById('btnHistory').href = links.manmanbuy;
+    document.getElementById('btnSmzdm').href = links.smzdm;
+    document.getElementById('btnRebate').href = links.rebate;
+    document.getElementById('rebateSub').textContent = getRebateText(platform);
+
+    // 更新优惠券
+    const coupons = COUPONS[platform] || COUPONS['unknown'];
+    const couponSection = document.getElementById('couponSection');
+    const couponList = document.getElementById('couponList');
+    if (coupons.length) {
+      couponSection.classList.add('visible');
+      couponList.innerHTML = coupons.map(c => `
+        <div class="coupon-item">
+          <span class="coupon-desc">${c.desc}</span>
+          <span class="coupon-code" onclick="copyCode('${c.code}', this)">${c.code}</span>
+        </div>
+      `).join('');
+    } else {
+      couponSection.classList.remove('visible');
+    }
+
+    // 滚动到结果
+    card.scrollIntoView({ behavior: 'smooth' });
+    showToast('已匹配 ' + (platform !== 'unknown' ? platform.toUpperCase() : '通用'));
+  }
+
+  // ========== 辅助 ==========
+  function demoSearch(keyword) {
+    document.getElementById('urlInput').value = keyword;
+    analyze();
+  }
+
+  function copyCode(code, el) {
+    navigator.clipboard.writeText(code).then(() => {
+      el.textContent = '已复制!';
+      setTimeout(() => el.textContent = code, 1500);
+    });
+    showToast('✅ 已复制: ' + code);
+  }
+
+  function copyShareLink() {
+    const input = document.getElementById('urlInput').value;
+    if (input) {
+      navigator.clipboard.writeText(input).then(() => showToast('✅ 链接已复制'));
+    } else {
+      showToast('请先输入链接');
+    }
+  }
+
+  function showToast(msg) {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(toast._t);
+    toast._t = setTimeout(() => toast.classList.remove('show'), 1800);
+  }
+
+  // ========== 分享入口 ==========
+  // 如果通过分享链接打开（?q=xxx），自动填充
+  const urlParams = new URLSearchParams(location.search);
+  const sharedQuery = urlParams.get('q');
+  if (sharedQuery) {
+    document.getElementById('urlInput').value = sharedQuery;
+    analyze();
+  }
+
+  // 监听粘贴事件，自动触发
+  document.getElementById('urlInput').addEventListener('paste', () => {
+    setTimeout(analyze, 300);
+  });
+</script>
+
+</body>
+</html>

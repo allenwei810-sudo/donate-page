@@ -1,0 +1,17 @@
+{
+  "name": "购物助手 - 比价返利",
+  "short_name": "购物助手",
+  "description": "618 购物比价返利一键查",
+  "start_url": "/donate-page/shopping.html",
+  "display": "standalone",
+  "background_color": "#0f0f1a",
+  "theme_color": "#1a1a2e",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://img.icons8.com/emoji/96/000000/shopping-cart-emoji.png",
+      "sizes": "96x96",
+      "type": "image/png"
+    }
+  ]
+}
